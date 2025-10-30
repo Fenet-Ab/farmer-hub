@@ -1,4 +1,6 @@
 import express from 'express';
+import bcrypt from 'bcrypt';
+import User from '../models/userModel.js'; // Import the User model
 import verifyToken from '../middlewares/authMiddleware.js';
 import authorizeRoles from '../middlewares/roleMiddleware.js';
 
@@ -22,6 +24,62 @@ router.get('/user',verifyToken,authorizeRoles('supplier','user','admin'),(req,re
 
 
 });
+
+//user updates own profile
+router.put("/update-profile", verifyToken, authorizeRoles("user","supplier"), async (req, res) => {
+  const userId = req.user.id; // from JWT token
+  const { name, email, currentPassword, newPassword } = req.body;
+
+  // Ensure the current password is provided
+  if (!currentPassword) {
+    return res.status(400).json({ message: "Current password is required to update profile." });
+  }
+
+  const user = await User.findById(userId).select('+password');
+
+  if (!user) {
+    return res.status(404).json({ message: "user not found" });
+  }
+
+  // Verify current password before allowing changes
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) {
+    return res.status(401).json({ message: "Current password is incorrect" });
+  }
+
+  // Update fields if provided
+  if (name) user.name = name;
+
+  // If email is being updated, check for uniqueness first
+  if (email && email !== user.email) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email is already in use by another account." });
+    }
+    user.email = email;
+  }
+
+  if (newPassword) {
+    user.password = await bcrypt.hash(newPassword, 10);
+  }
+
+  await user.save();
+
+  res.status(200).json({
+    message: "Profile updated successfully",
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  });
+});
+
+
+
+
+
 //uploads /update profile picture+
 
 router.put(

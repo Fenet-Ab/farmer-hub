@@ -1,0 +1,194 @@
+
+.container{
+    position:relative;
+    width: 850px;
+    height: 550px;
+    border:2px solid #6ee849;
+   
+    overflow: hidden;
+    background: linear-gradient(45deg, #3e9336, #073867);
+}
+
+.container .form-box{
+    position:absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    padding: 40px;
+    transition: left 0.5s ease;
+}
+
+.form-box.login {
+    left: 0;
+}
+
+.form-box.signup {
+    left: 50%;
+}
+
+.form-box form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
+}
+
+.form-box .input-box{
+    position: relative;
+    width: 100%;
+    height: 50px;
+    margin-top: 25px;
+}
+
+.input-box label {
+    position: absolute;
+    top: 50%;
+    left: 35px;
+    transform: translateY(-50%);
+    color: #fff;
+    font-size: 16px;
+    pointer-events: none;
+    transition: .5s;
+}
+
+.input-box input:focus ~ label,
+.input-box input:valid ~ label {
+    top: -5px;
+    font-size: 12px;
+    color: #6ee849;
+}
+
+.input-box input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 600;
+    border-bottom: 2px solid #fff;
+    padding-left: 35px;
+    padding-right: 50px;
+    transition: .5s;
+}
+
+.input-box input:focus {
+    border-bottom-color: #6ee849;
+    box-shadow: 0 2px 0 #6ee849;
+}
+
+.input-box .icon {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #fff;
+    font-size: 18px;
+}
+
+.input-box .toggle-password {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.input-box .toggle-password:hover {
+    color: #6ee849;
+}
+
+.remember-password {
+    display: flex;
+    justify-content: space-between;
+    margin: 30px 0;
+    font-size: 14px;
+}
+
+.remember-password label {
+    color: #fff;
+    cursor: pointer;
+}
+
+.remember-password a {
+    color: #fff;
+    text-decoration: none;
+    transition: .3s;
+}
+
+.remember-password a:hover {
+    color: #6ee849;
+}
+
+.btn {
+    width: 100%;
+    height: 45px;
+    background: transparent;
+    border: 2px solid #fff;
+    outline: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 500;
+    margin-top: 20px;
+    transition: .5s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: #6ee849;
+    transition: .5s;
+    z-index: -1;
+}
+
+.btn:hover::before {
+    width: 100%;
+}
+
+.btn:hover {
+    border-color: #6ee849;
+}
+
+.create-account {
+    margin-top: 20px;
+    text-align: center;
+    color: #fff;
+    font-size: 14px;
+}
+
+.create-account p {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 100%;
+        max-width: 450px;
+        height: auto;
+        min-height: 600px;
+    }
+    
+    .form-box {
+        width: 100% !important;
+        position: relative !important;
+        left: 0 !important;
+    }
+    
+    .info-box {
+        display: none !important;
+    }
+}
