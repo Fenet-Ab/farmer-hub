@@ -24,9 +24,30 @@ router.get('/user',verifyToken,authorizeRoles('supplier','user','admin'),(req,re
 
 
 });
+// Get logged-in user's profile
+router.get("/profile", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profilePicture: user.profilePicture || null,
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 //user updates own profile
-router.put("/update-profile", verifyToken, authorizeRoles("user","supplier"), async (req, res) => {
+router.put("/update-profile", verifyToken, authorizeRoles("user","supplier","admin"), async (req, res) => {
   const userId = req.user.id; // from JWT token
   const { name, email, currentPassword, newPassword } = req.body;
 
@@ -110,4 +131,20 @@ router.put(
       res.status(500).json({ message: "Server error" });
     }
   });
+  //get profile picture
+router.get("/profile-picture",verifyToken,async(req,res)=>{
+  try{
+    const user = await User.findById(req.user.id).select("profilePicture");
+    if(!user){
+      return res.status(404).json({message:"User not Found"})
+      res.status(200).json({
+        profilePicture:user.profilePicture,
+      })
+    }
+
+  }catch(error){
+    console.error("Error getting profile picture",error);
+  }
+
+})
 export default router;

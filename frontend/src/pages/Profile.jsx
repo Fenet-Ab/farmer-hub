@@ -1,9 +1,294 @@
-import React from 'react'
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { FaUser, FaEnvelope, FaShieldAlt, FaCamera, FaLock } from "react-icons/fa";
 
 const Profile = () => {
-  return (
-    <div>Profile</div>
-  )
-}
+  const [user, setUser] = useState({});
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+  });
 
-export default Profile
+  const token = localStorage.getItem("token");
+
+  // Auto-hide message after 5 seconds
+  useEffect(() => {
+    if (message.text) {
+      const timer = setTimeout(() => {
+        setMessage({ type: '', text: '' });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message.text]);
+
+  // Handle file selection and create preview
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  // Clean up preview URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  // ✅ Fetch profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/users/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(res.data);
+      } catch (err) {
+        console.error("Failed to load profile:", err);
+      }
+    };
+    fetchProfile();
+  }, [token]);
+
+  // ✅ Upload profile picture
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      setMessage({ type: 'error', text: 'Please select a file first!' });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("profilePic", selectedFile);
+
+    try {
+      setUploading(true);
+      const res = await axios.put(
+        "http://localhost:5000/api/users/profile-picture",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setMessage({ type: 'success', text: 'Profile picture updated successfully!' });
+      setUser({ ...user, profilePicture: res.data.profilePicture });
+      setSelectedFile(null);
+      // Clean up preview URL after successful upload
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update profile picture' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // ✅ Update password
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      const res = await axios.put(
+        "http://localhost:5000/api/users/update-profile",
+        passwordData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessage({ type: 'success', text: res.data.message });
+      setShowPasswordForm(false);
+      setPasswordData({ currentPassword: "", newPassword: "" });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Error updating password' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 flex items-center justify-center p-4 md:p-8">
+      <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl shadow-lg p-6 md:p-8">
+        <h1 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-emerald-600 to-lime-500 bg-clip-text text-transparent">
+          My Profile
+        </h1>
+        <p className="text-sm text-gray-600 mb-6">Manage your account settings and preferences</p>
+
+        {/* Success/Error Messages */}
+        {message.text && (
+          <div
+            className={`mb-6 border rounded-xl px-4 py-3 ${
+              message.type === 'success'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-red-50 text-red-700 border-red-200'
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Profile Picture Section */}
+          <div className="flex flex-col items-center md:items-start">
+            <div className="relative mb-4">
+              <img
+                src={
+                  previewUrl ||
+                  (user.profilePicture ? `http://localhost:5000${user.profilePicture}` : "https://via.placeholder.com/150")
+                }
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover border-4 border-emerald-200 shadow-lg"
+              />
+              <div className="absolute bottom-0 right-0 p-2 bg-emerald-600 rounded-full text-white">
+                <FaCamera className="w-4 h-4" />
+              </div>
+            </div>
+            <label className="mb-2 text-sm font-medium text-gray-700 cursor-pointer">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 hover:bg-emerald-50 hover:border-emerald-300 transition-colors">
+                <FaCamera /> Choose Photo
+              </span>
+              <input
+                type="file"
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+              />
+            </label>
+            {selectedFile && (
+              <p className="text-xs text-gray-500 mb-2">{selectedFile.name}</p>
+            )}
+            <button
+              onClick={handleUpload}
+              disabled={!selectedFile || uploading}
+              className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-lime-500 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {uploading ? 'Uploading...' : 'Update Picture'}
+            </button>
+          </div>
+
+          {/* Profile Info Section */}
+          <div className="space-y-4">
+            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+              <div className="flex items-center gap-3 mb-3">
+                <FaUser className="text-emerald-600" />
+                <div>
+                  <p className="text-xs text-gray-500">Name</p>
+                  <p className="font-semibold text-gray-800">{user.name || 'Not set'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+              <div className="flex items-center gap-3 mb-3">
+                <FaEnvelope className="text-emerald-600" />
+                <div>
+                  <p className="text-xs text-gray-500">Email</p>
+                  <p className="font-semibold text-gray-800">{user.email || 'Not set'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+              <div className="flex items-center gap-3 mb-3">
+                <FaShieldAlt className="text-emerald-600" />
+                <div>
+                  <p className="text-xs text-gray-500">Role</p>
+                  <p className="font-semibold text-gray-800 capitalize">{user.role || 'Not set'}</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowPasswordForm(true)}
+              className="w-full inline-flex items-center justify-center gap-2 bg-white border-2 border-emerald-600 text-emerald-600 px-4 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition-colors"
+            >
+              <FaLock /> Update Password
+            </button>
+          </div>
+        </div>
+
+        {/* Popup for password update */}
+        {showPasswordForm && (
+          <div className="fixed inset-0 flex justify-center items-center z-50 p-4">
+            {/* Backdrop with blur/shadow effect */}
+            <div 
+              className="absolute inset-0 bg-gray-900/20 backdrop-blur-sm"
+              onClick={() => setShowPasswordForm(false)}
+            ></div>
+            
+            {/* Modal */}
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 md:p-8 border border-gray-200">
+              <h2 className="text-2xl font-extrabold mb-2 bg-gradient-to-r from-emerald-600 to-lime-500 bg-clip-text text-transparent">
+                Update Password
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">Enter your current password and choose a new one</p>
+              
+              <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                  <input
+                    type="password"
+                    placeholder="Enter current password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) =>
+                      setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                  <input
+                    type="password"
+                    placeholder="Enter new password"
+                    value={passwordData.newPassword}
+                    onChange={(e) =>
+                      setPasswordData({ ...passwordData, newPassword: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                  />
+                </div>
+                
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-lime-500 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'Updating...' : 'Update Password'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordForm(false)}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Profile;

@@ -10,26 +10,37 @@ import AdminDashboard from './pages/Admin/AdminDashboard.jsx'
 import User from './pages/User/User.jsx'
 import SupplierDashboard from './pages/supplier/SupplierDashboard.jsx'
 import Profile from './pages/Profile.jsx'
+import AdminNavbar from './components/navbar/AdminNavbar.jsx'
+import SupplierNavbar from './components/navbar/SupplierNavbar.jsx'
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
+import UserController from './pages/Admin/UserController.jsx'
+import CreateUser from './pages/Admin/CreateUser.jsx'
 
 const App = () => {
   const location = useLocation()
-  const isLoginPage = location.pathname === '/login'
-  
+
+  const isAdmin = location.pathname.startsWith('/admin') || location.pathname === '/admin-dashboard'
+  const isSupplier = location.pathname.startsWith('/supplier') || location.pathname === '/supplier-dashboard'
+
+  const CurrentNavbar = isAdmin ? AdminNavbar : isSupplier ? SupplierNavbar : Navbar
+
   return (
     <>
-      <Navbar />
-      <div style={{ paddingTop: '80px' }}>
+      <CurrentNavbar />
+      <div style={{ paddingTop: '40px' }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/products" element={<Products />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/user-dashboard" element={<User />} />
-          <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/user-dashboard" element={<ProtectedRoute><User /></ProtectedRoute>} />
+          <Route path="/supplier-dashboard" element={<ProtectedRoute><SupplierDashboard /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/user" element={<ProtectedRoute><UserController/></ProtectedRoute>} />
+          <Route path="/create-user" element={<ProtectedRoute><CreateUser/></ProtectedRoute>} />
         </Routes>
-        <Footer />
+        {!isAdmin && !isSupplier && <Footer />}
       </div>
     </>
   )

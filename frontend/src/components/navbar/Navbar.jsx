@@ -11,6 +11,8 @@ const Navbar = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('English')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const location = useLocation()
+
+
   const navigate = useNavigate()
   const languageRef = useRef(null)
   const profileRef = useRef(null)
@@ -141,7 +143,7 @@ const Navbar = () => {
                 </button>
 
                 {isProfileMenuOpen && (
-                  <div className=' right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-md  py-2  pointer-events-auto'>
+                  <div className='absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-md  py-2 z-[1100] pointer-events-auto'>
                     <Link
                       to='/profile'
                       className='block text-left px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors'
