@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   FaHome,
   FaBox,
-  FaShoppingCart,
+
   FaUser,
   FaChevronLeft,
   FaChevronRight,
@@ -49,9 +49,9 @@ const SupplierSidebar = () => {
         {/* Navigation Links */}
         <nav className='p-2 space-y-2'>
           <Link
-            to='/'
+            to='/supplier-dashboard'
             className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 relative ${
-              isActive('/')
+              isActive('/supplier-dashboard')
                 ? 'bg-emerald-50 text-emerald-700 font-semibold'
                 : 'text-gray-700 hover:bg-emerald-50'
             }`}
@@ -60,7 +60,7 @@ const SupplierSidebar = () => {
             {!collapsed && (
               <div className='flex-1'>
                 <span>Home</span>
-                {isActive('/') && (
+                {isActive('/supplier-dashboard') && (
                   <div className='absolute bottom-0 left-3 right-3 h-0.5 bg-emerald-500 rounded-full'></div>
                 )}
               </div>
@@ -68,9 +68,9 @@ const SupplierSidebar = () => {
           </Link>
 
           <Link
-            to='/product-detail'
+            to='/my-product'
             className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 relative ${
-              isActive('/product-detail')
+              isActive('/my-product')
                 ? 'bg-emerald-50 text-emerald-700 font-semibold'
                 : 'text-gray-700 hover:bg-emerald-50'
             }`}
@@ -79,7 +79,7 @@ const SupplierSidebar = () => {
             {!collapsed && (
               <div className='flex-1'>
                 <span>Products</span>
-                {isActive('/product-detail') && (
+                {isActive('/my-product') && (
                   <div className='absolute bottom-0 left-3 right-3 h-0.5 bg-emerald-500 rounded-full'></div>
                 )}
               </div>

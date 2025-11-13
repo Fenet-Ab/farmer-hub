@@ -74,6 +74,30 @@ router.get("/",async(req,res)=>{
         
     }
 })
+
+// Get supplier's products
+router.get("/supplier/my-products", verifyToken, async(req,res)=>{
+    try {
+        if(req.user.role !== 'supplier'){
+            return res.status(403).json({
+                message:"Access denied only for suppliers"
+            })
+        }
+        const products = await Product.find({ supplier: req.user.id })
+        .sort({createdAt: -1});
+        res.status(200).json({
+            success:true,
+            count:products.length,
+            products
+        });
+    } catch (error) {
+        console.error("error fetching supplier products",error.message);
+        res.status(500).json({
+            success:false,
+            message:"server error while fetching products"
+        })
+    }
+})
 // get  product by id
 router.get("/:id",async(req,res)=>{
     try {

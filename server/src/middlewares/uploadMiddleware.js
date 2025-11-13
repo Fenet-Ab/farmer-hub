@@ -53,7 +53,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  // limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 });
 
 //  Centralized error handler for upload errors
@@ -62,9 +62,9 @@ export const handleUploadError = (err, req, res, next) => {
     // Multer-specific errors
     let message = "Upload failed";
     switch (err.code) {
-      case "LIMIT_FILE_SIZE":
-        message = "File too large. Max size is 5MB.";
-        break;
+      // case "LIMIT_FILE_SIZE":
+      //   message = "File too large. Max size is 5MB.";
+      //   break;
       case "LIMIT_UNEXPECTED_FILE":
         message = err.message || "Unexpected file type.";
         break;

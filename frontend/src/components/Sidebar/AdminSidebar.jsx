@@ -113,24 +113,7 @@ const AdminSidebar = ({ isOpen = true }) => {
               </Link>
             </li>
             <li>
-              <Link
-                to='/supplier-dashboard'
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 relative ${
-                  isActive('/supplier-dashboard')
-                    ? 'bg-emerald-50 text-emerald-700 font-semibold'
-                    : 'text-gray-700 hover:bg-emerald-50'
-                }`}
-              >
-                <FaUserShield className='w-4 h-4' />
-                {!collapsed && (
-                  <div className='flex-1'>
-                    <span>Suppliers</span>
-                    {isActive('/supplier-dashboard') && (
-                      <div className='absolute bottom-0 left-3 right-3 h-0.5 bg-emerald-500 rounded-full'></div>
-                    )}
-                  </div>
-                )}
-              </Link>
+             
             </li>
             <li>
               <Link
@@ -191,12 +174,12 @@ const AdminSidebar = ({ isOpen = true }) => {
         <div className='flex-1'></div>
 
         {/* Logout */}
-        <div className='mt-4 border-t border-gray-200 p-3'>
+        <div className='absolute bottom-4 left-4 right-4'>
           <button
             onClick={handleLogout}
-            className='flex items-center gap-3 w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors'
+            className='w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors'
           >
-            <FaSignOutAlt className='w-4 h-4' />
+            <FaSignOutAlt className='w-4 h-4 flex-shrink-0' />
             {!collapsed && <span>Logout</span>}
           </button>
         </div>

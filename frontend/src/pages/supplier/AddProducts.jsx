@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import {
   FaBars,
@@ -36,6 +36,18 @@ const AddProducts = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+
+  useEffect(()=>{
+    let timer;
+    if(success || error){
+        timer = setTimeout(()=>{
+            setSuccess(null)
+            setError(null)
+
+        },5000)
+    }
+    return ()=>clearTimeout(timer)
+  },[success,error])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target

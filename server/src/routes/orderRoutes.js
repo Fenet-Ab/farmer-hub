@@ -73,6 +73,50 @@ router.post('/create', verifyToken, async (req, res) => {
   }
 })
 
+// Get supplier's orders (orders containing supplier's products)
+router.get('/supplier/my-orders', verifyToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'supplier') {
+      return res.status(403).json({ message: 'Access denied only for suppliers' })
+    }
+
+    // First get all products by this supplier
+    const supplierProducts = await Product.find({ supplier: req.user.id }).select('_id')
+    const productIds = supplierProducts.map(p => p._id)
+
+    // Find orders that contain any of these products
+    const orders = await Order.find({
+      'items.product': { $in: productIds }
+    })
+      .populate('user', 'name email')
+      .populate('items.product', 'name price image category supplier')
+      .sort({ createdAt: -1 })
+
+    // Filter to only include items from this supplier and calculate supplier revenue
+    const filteredOrders = orders.map(order => {
+      const supplierItems = order.items.filter(item => 
+        item.product && item.product.supplier && item.product.supplier.toString() === req.user.id
+      )
+      const supplierTotal = supplierItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      
+      return {
+        ...order.toObject(),
+        supplierItems,
+        supplierTotal
+      }
+    }).filter(order => order.supplierItems.length > 0)
+
+    res.status(200).json({
+      success: true,
+      count: filteredOrders.length,
+      orders: filteredOrders,
+    })
+  } catch (error) {
+    console.error('Error fetching supplier orders:', error)
+    res.status(500).json({ success: false, message: 'Server error while fetching orders' })
+  }
+})
+
 export default router
 
 

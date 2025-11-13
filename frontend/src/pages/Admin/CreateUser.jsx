@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import AdminSidebar from '../../components/Sidebar/AdminSidebar'
 
 const CreateUser = () => {
   const [form, setForm] = useState({
@@ -9,6 +10,7 @@ const CreateUser = () => {
     role: 'supplier',
   })
   const [submitting, setSubmitting] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [message, setMessage] = useState({ type: '', text: '' })
 
   // Auto-hide message after 5 seconds
@@ -61,6 +63,13 @@ const CreateUser = () => {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 flex items-center justify-center p-4 md:p-8'>
+       <div
+        className={`fixed left-0 top-[60px] h-[calc(100vh-40px)] w-64 z-40 overflow-y-auto transition-transform duration-300 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
+      >
+        <AdminSidebar isOpen={isSidebarOpen} />
+      </div>
       <div className='w-full max-w-xl bg-white border border-gray-200 rounded-2xl shadow-sm p-6 md:p-8'>
         <h1 className='text-2xl font-extrabold text-gray-800 mb-2'>Create User</h1>
         <p className='text-sm text-gray-600 mb-6'>Add a new admin or supplier to the platform.</p>

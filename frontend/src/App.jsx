@@ -19,6 +19,7 @@ import ChangePassword from './components/Popup/ChangePassword.jsx'
 import ProductDetail from './pages/Admin/ProductDetail.jsx'
 import OrderTable from './pages/Admin/OrderTable.jsx'
 import AddProducts from './pages/supplier/AddProducts.jsx'
+import MyProduct from './pages/supplier/MyProduct.jsx'
 
 const App = () => {
   const location = useLocation()
@@ -50,6 +51,7 @@ const App = () => {
           <Route path="/product-detail" element={<ProtectedRoute><ProductDetail/></ProtectedRoute>} />
           <Route path="/order-detail" element={<ProtectedRoute><OrderTable/></ProtectedRoute>} />
           <Route path="/add-products" element={<ProtectedRoute><AddProducts/></ProtectedRoute>} />
+          <Route path="/my-product" element={<ProtectedRoute><MyProduct/></ProtectedRoute>} />
         </Routes>
         {!isAdmin && !isSupplier  && !isUser && !isAddProducts &&  <Footer />}
       </div>
