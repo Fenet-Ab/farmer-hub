@@ -8,6 +8,7 @@ import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import bootstrapRoutes from "./routes/bootstrapRoutes.js";
 import cartRoutes from './routes/cartRoutes.js'
+import orderRoutes from './routes/orderRoutes.js'
 
 import Path from 'path';
 
@@ -33,8 +34,10 @@ app.use("/api/auth",authRoutes);
 app.use("/api/users",userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/uploads',express.static(Path.join(process.cwd(),'uploads')))
+
 app.use("/api/products",productRoutes);
 app.use("/api/cart",cartRoutes);
+app.use("/api/orders",orderRoutes);
 
 
 app.use("/api/bootstrap", bootstrapRoutes);

@@ -74,9 +74,9 @@ const AdminSidebar = ({ isOpen = true }) => {
             </li>
             <li>
               <Link
-                to='/products'
+                to='/product-detail'
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 relative ${
-                  isActive('/products')
+                  isActive('/product-detail')
                     ? 'bg-emerald-50 text-emerald-700 font-semibold'
                     : 'text-gray-700 hover:bg-emerald-50'
                 }`}
@@ -85,7 +85,7 @@ const AdminSidebar = ({ isOpen = true }) => {
                 {!collapsed && (
                   <div className='flex-1'>
                     <span>Products</span>
-                    {isActive('/products') && (
+                    {isActive('/product-detail') && (
                       <div className='absolute bottom-0 left-3 right-3 h-0.5 bg-emerald-500 rounded-full'></div>
                     )}
                   </div>
@@ -94,7 +94,7 @@ const AdminSidebar = ({ isOpen = true }) => {
             </li>
             <li>
               <Link
-                to='/user-dashboard'
+                to='/user-controller'
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 relative ${
                   isActive('/user-dashboard')
                     ? 'bg-emerald-50 text-emerald-700 font-semibold'
@@ -105,7 +105,7 @@ const AdminSidebar = ({ isOpen = true }) => {
                 {!collapsed && (
                   <div className='flex-1'>
                     <span>Users</span>
-                    {isActive('/user-dashboard') && (
+                    {isActive('/user-controller') && (
                       <div className='absolute bottom-0 left-3 right-3 h-0.5 bg-emerald-500 rounded-full'></div>
                     )}
                   </div>
@@ -134,7 +134,7 @@ const AdminSidebar = ({ isOpen = true }) => {
             </li>
             <li>
               <Link
-                to='/admin-dashboard'
+                to='/order-detail'
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 relative ${
                   false
                     ? 'bg-emerald-50 text-emerald-700 font-semibold'
@@ -144,8 +144,11 @@ const AdminSidebar = ({ isOpen = true }) => {
                 <FaShoppingCart className='w-4 h-4' />
                 {!collapsed && (
                   <div className='flex-1'>
-                    <span>Orders</span>
-                  </div>
+                  <span>Orders</span>
+                  {isActive('/order-detail') && (
+                    <div className='absolute bottom-0 left-3 right-3 h-0.5 bg-emerald-500 rounded-full'></div>
+                  )}
+                </div>
                 )}
               </Link>
               <Link
@@ -182,12 +185,7 @@ const AdminSidebar = ({ isOpen = true }) => {
           </ul>
         </nav>
 
-        {/* CTA */}
-        <div className='px-3'>
-          <Link to='/products' className='inline-flex items-center gap-2 w-full px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white justify-center'>
-            <FaPlus /> {!collapsed && <span>New Product</span>}
-          </Link>
-        </div>
+        
 
         {/* Spacer to allow bottom content visibility */}
         <div className='flex-1'></div>

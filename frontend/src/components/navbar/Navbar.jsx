@@ -3,12 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { GiWheat } from 'react-icons/gi'
 import { FaBars, FaTimes, FaGlobe, FaShoppingCart, FaUser } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
+import axios from 'axios'
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState('English')
+  const [profilePictureUrl, setProfilePictureUrl] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const location = useLocation()
 
@@ -59,6 +61,32 @@ const Navbar = () => {
   }, [])
 
   const isActive = (path) => location.pathname === path
+  // Fetch profile picture
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setProfilePictureUrl(null)
+      return
+    }
+
+    const fetchProfilePic = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/users/profile-picture', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data.profilePic) {
+          setProfilePictureUrl(`http://localhost:5000${res.data.profilePic}`);
+        } else {
+          setProfilePictureUrl(null);
+        }
+      } catch (err) {
+        console.error('Failed to load profile picture:', err);
+        setProfilePictureUrl(null);
+      }
+    };
+
+    fetchProfilePic();
+  }, [isLoggedIn]);
 
   return (
     <nav className='fixed top-0 left-0 w-full border-b border-gray-200 font-poppins bg-white z-50'>
@@ -139,7 +167,15 @@ const Navbar = () => {
                   onClick={toggleProfileMenu}
                   className='p-2 rounded-full bg-gray-100 hover:bg-emerald-100 transition-colors'
                 >
-                  <FaUser className='text-gray-600' />
+                  {profilePictureUrl ? (
+                    <img
+                      src={profilePictureUrl}
+                      alt='Profile'
+                      className='h-6 w-6 rounded-full object-cover'
+                    />
+                  ) : (
+                    <FaUser className='text-gray-600' />
+                  )}
                 </button>
 
                 {isProfileMenuOpen && (
@@ -215,7 +251,15 @@ const Navbar = () => {
               <FaShoppingCart size={24} className='text-gray-600 cursor-pointer hover:text-emerald-600 transition-colors' />
               <div className='relative' ref={profileRef}>
                 <button onClick={toggleProfileMenu} className='p-2 rounded-full bg-gray-100'>
-                  <FaUser className='text-gray-600' />
+                  {profilePictureUrl ? (
+                    <img
+                      src={profilePictureUrl}
+                      alt='Profile'
+                      className='h-6 w-6 rounded-full object-cover'
+                    />
+                  ) : (
+                    <FaUser className='text-gray-600' />
+                  )}
                 </button>
                 {isProfileMenuOpen && (
                   <div className='absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-xl shadow-md py-2 z-50'>

@@ -15,13 +15,20 @@ import SupplierNavbar from './components/navbar/SupplierNavbar.jsx'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
 import UserController from './pages/Admin/UserController.jsx'
 import CreateUser from './pages/Admin/CreateUser.jsx'
+import ChangePassword from './components/Popup/ChangePassword.jsx'
+import ProductDetail from './pages/Admin/ProductDetail.jsx'
+import OrderTable from './pages/Admin/OrderTable.jsx'
+import AddProducts from './pages/supplier/AddProducts.jsx'
 
 const App = () => {
   const location = useLocation()
 
   const isAdmin = location.pathname.startsWith('/admin') || location.pathname === '/admin-dashboard'
   const isSupplier = location.pathname.startsWith('/supplier') || location.pathname === '/supplier-dashboard'
-
+    const isUser  = location.pathname.startsWith('/user') || location.pathname === '/user-dashboard'
+     const isAddProducts  = location.pathname.startsWith('/add-products') || location.pathname === '/add-products'
+ 
+  
   const CurrentNavbar = isAdmin ? AdminNavbar : isSupplier ? SupplierNavbar : Navbar
 
   return (
@@ -37,10 +44,14 @@ const App = () => {
           <Route path="/user-dashboard" element={<ProtectedRoute><User /></ProtectedRoute>} />
           <Route path="/supplier-dashboard" element={<ProtectedRoute><SupplierDashboard /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/user" element={<ProtectedRoute><UserController/></ProtectedRoute>} />
+          <Route path="/user-controller" element={<ProtectedRoute><UserController/></ProtectedRoute>} />
           <Route path="/create-user" element={<ProtectedRoute><CreateUser/></ProtectedRoute>} />
+          <Route path="/profile/change-password" element={<ProtectedRoute><ChangePassword/></ProtectedRoute>} />
+          <Route path="/product-detail" element={<ProtectedRoute><ProductDetail/></ProtectedRoute>} />
+          <Route path="/order-detail" element={<ProtectedRoute><OrderTable/></ProtectedRoute>} />
+          <Route path="/add-products" element={<ProtectedRoute><AddProducts/></ProtectedRoute>} />
         </Routes>
-        {!isAdmin && !isSupplier && <Footer />}
+        {!isAdmin && !isSupplier  && !isUser && !isAddProducts &&  <Footer />}
       </div>
     </>
   )

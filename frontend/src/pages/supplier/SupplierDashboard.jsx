@@ -1,8 +1,11 @@
 import React from 'react'
+import SupplierSidebar from '../../components/Sidebar/SupplierSidebar'
 
 const SupplierDashboard = () => {
   return (
-    <div>SupplierDashboard</div>
+    <div>
+      <SupplierSidebar/>
+    </div>
   )
 }
 

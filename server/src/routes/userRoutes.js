@@ -37,7 +37,7 @@ router.get("/profile", verifyToken, async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      profilePicture: user.profilePicture || null,
+      profilePic: user.profilePic || null,
     });
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -98,11 +98,34 @@ router.put("/update-profile", verifyToken, authorizeRoles("user","supplier","adm
 });
 
 
+//create/add profile picture (POST for first time, PUT for update)
+router.post("/profile-picture",verifyToken,upload.single("profilePic"),async(req,res)=>{
+  try {
+    if(!req.file){
+      return res.status(400).json({ message: "No file uploaded" });
+    }
 
+    const user = await User.findById(req.user.id);
+    if(!user){
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update or create profile picture
+    user.profilePic = `/uploads/${req.file.filename}`;
+    await user.save();
+
+    res.status(201).json({
+      message: "Profile picture added successfully",
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.error("Error creating profile picture:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+})
 
 
 //uploads /update profile picture+
-
 router.put(
   "/profile-picture",
   verifyToken,
@@ -118,13 +141,13 @@ router.put(
 
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id,
-        { profilePicture: `/uploads/${req.file.filename}` },
+        { profilePic: `/uploads/${req.file.filename}` },
         { new: true }
       );
 
       res.status(200).json({
         message: "Profile picture updated successfully",
-        profilePicture: updatedUser.profilePicture,
+        profilePic: updatedUser.profilePic,
       });
     } catch (error) {
       console.error("Error updating profile picture:", error);
@@ -134,16 +157,22 @@ router.put(
   //get profile picture
 router.get("/profile-picture",verifyToken,async(req,res)=>{
   try{
-    const user = await User.findById(req.user.id).select("profilePicture");
+    const user = await User.findById(req.user.id).select("profilePic");
     if(!user){
       return res.status(404).json({message:"User not Found"})
-      res.status(200).json({
-        profilePicture:user.profilePicture,
-      })
-    }
+     }
+     
+     // Return profile picture or null explicitly
+     const profilePic = user.profilePic || null;
+     
+     res.status(200).json({
+      profilePic: profilePic,
+      message: profilePic ? "Profile picture found" : "No profile picture set"
+    });
 
   }catch(error){
     console.error("Error getting profile picture",error);
+    res.status(500).json({ message: "Server error" });
   }
 
 })

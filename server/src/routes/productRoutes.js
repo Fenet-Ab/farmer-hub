@@ -60,11 +60,6 @@ router.get("/",async(req,res)=>{
         const product = await Product.find()
         .populate("supplier","name email")
         .sort({createdAt: -1});
-        if(!product.length){
-            return res.status(404).json({
-                message:"product not found"
-            })
-        }
         res.status(200).json({
             success:true,
             count:product.length
