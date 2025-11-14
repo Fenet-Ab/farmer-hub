@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import Navbar from '../components/navbar/Navbar'
-import Footer from '../components/footer/Footer'
+
 import axios from 'axios'
 import { FaShoppingCart, FaSearch, FaFilter, FaTimes, FaCheckCircle, FaBox, FaUser, FaTag } from 'react-icons/fa'
 
@@ -92,216 +91,213 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 flex flex-col">
-      
-      
-      <div className="container mx-auto px-4 py-8 mt-16 flex-1 pb-24">
+  
+      <div className="container mx-auto px-4 py-12 mt-20 flex-1 pb-28">
+  
         {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Our Products</h1>
-          <p className="text-gray-600">Browse all products from our trusted suppliers</p>
+        <div className="mb-10 text-center">
+          <h1 className="text-5xl font-extrabold text-emerald-700 drop-shadow-sm">
+            Explore Our Products
+          </h1>
+          <p className="text-gray-600 mt-2 text-lg">
+            High-quality items sourced from trusted local farmers
+          </p>
         </div>
-
-        {/* Search and Filter */}
-        <div className="mb-6 flex flex-col md:flex-row gap-4 max-w-4xl mx-auto">
+  
+        {/* Search & Filter Row */}
+        <div className="mb-10 flex flex-col md:flex-row gap-5 max-w-4xl mx-auto">
+  
+          {/* Search */}
           <div className="flex-1 relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search products, suppliers..."
+              placeholder="Search by name, description or supplier..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-12 pr-12 py-4 bg-white/80 backdrop-blur-sm border border-gray-300 
+                rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
                 <FaTimes />
               </button>
             )}
           </div>
+  
+          {/* Category Filter */}
           <div className="relative">
-            <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+            <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none bg-white min-w-[150px]"
+              className="pl-12 pr-10 py-4 bg-white/80 backdrop-blur-sm border border-gray-300 
+                rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 appearance-none min-w-[180px]"
             >
               {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
+                <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
           </div>
         </div>
-
+  
         {/* Success Message */}
         {showSuccess && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-2 max-w-4xl mx-auto">
-            <FaCheckCircle /> Product added to cart successfully!
+          <div className="mb-6 p-4 bg-green-100/80 border border-green-300 
+            text-green-900 rounded-xl flex items-center gap-3 max-w-3xl mx-auto shadow">
+            <FaCheckCircle className="text-green-700" />
+            Product added to cart successfully!
           </div>
         )}
-
+  
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg max-w-4xl mx-auto">
+          <div className="mb-6 p-4 bg-red-100/80 border border-red-300 
+            text-red-900 rounded-xl max-w-3xl mx-auto shadow">
             {error}
           </div>
         )}
-
-        {/* Loading State */}
+  
+        {/* Loading */}
         {loading && (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600"></div>
+          <div className="text-center py-24">
+            <div className="animate-spin h-16 w-16 rounded-full border-4 border-emerald-500 border-t-transparent mx-auto"></div>
             <p className="mt-4 text-gray-600 text-lg">Loading products...</p>
           </div>
         )}
-
-        {/* Products Grid */}
+  
+        {/* No Products */}
         {!loading && !error && filteredProducts.length === 0 && (
-          <div className="text-center py-20">
-            <FaBox className="mx-auto text-gray-300 text-6xl mb-4" />
+          <div className="text-center py-24">
+            <FaBox className="mx-auto text-gray-300 text-7xl mb-4" />
             <p className="text-gray-600 text-lg mb-2">No products found.</p>
+  
             {searchTerm && (
               <button
                 onClick={() => {
                   setSearchTerm('')
                   setSelectedCategory('All')
                 }}
-                className="mt-4 text-emerald-600 hover:underline font-medium"
+                className="mt-4 text-emerald-600 hover:underline font-semibold"
               >
-                Clear all filters
+                Clear Filters
               </button>
             )}
           </div>
         )}
-
-        {!loading && !error && filteredProducts.length > 0 && (
-          <>
-            <div className="mb-6 text-center text-gray-600">
-              <span className="font-medium">Showing {filteredProducts.length}</span> of {products.length} product{products.length !== 1 ? 's' : ''}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product._id}
-                  className="bg-gradient-to-br from-white to-emerald-50/30 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-emerald-100 group backdrop-blur-sm"
-                >
-                  {/* Product Image */}
-                  <div className="relative h-56 bg-gradient-to-br from-emerald-100 to-lime-100 overflow-hidden">
-                    <img
-                      src={
-                        product.image?.startsWith('http')
-                          ? product.image
-                          : `http://localhost:5000${product.image}`
-                      }
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/400x300?text=No+Image'
-                      }}
-                    />
-                    <div className="absolute top-3 right-3">
-                      <span className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1 backdrop-blur-sm bg-opacity-90">
-                        <FaTag className="w-2.5 h-2.5" />
-                        {product.category}
+  
+        {/* Product Count */}
+        {!loading && filteredProducts.length > 0 && (
+          <div className="mb-8 text-center text-gray-600">
+            <span className="font-semibold text-emerald-700">{filteredProducts.length}</span>
+            &nbsp;of {products.length} products
+          </div>
+        )}
+  
+        {/* Product Grid */}
+        {!loading && filteredProducts.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {filteredProducts.map((product) => (
+              <div
+                key={product._id}
+                className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-md 
+                  hover:shadow-2xl transition-all duration-300 overflow-hidden 
+                  border border-emerald-100 group"
+              >
+  
+                {/* Product Image */}
+                <div className="relative h-56 overflow-hidden">
+                  <img
+                    src={
+                      product.image?.startsWith('http')
+                        ? product.image
+                        : `http://localhost:5000${product.image}`
+                    }
+                    className="w-full h-full object-cover group-hover:scale-110 
+                      transition-transform duration-700"
+                    onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=Image' }}
+                  />
+  
+                  <span className="absolute top-3 right-3 px-3 py-1.5 bg-emerald-700 text-white 
+                    text-xs font-bold rounded-full shadow">
+                    <FaTag className="inline-block mr-1" /> {product.category}
+                  </span>
+  
+                  {product.quantity === 0 && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center">
+                      <span className="bg-red-600 text-white py-2 px-4 rounded-lg font-bold">
+                        Out of Stock
                       </span>
                     </div>
-                    {product.quantity === 0 && (
-                      <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm">
-                        <span className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg shadow-xl">Out of Stock</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 min-h-[3rem] group-hover:text-emerald-700 transition-colors">
-                      {product.name}
-                    </h3>
-                    
-                    <p className="text-sm text-gray-700 mb-4 line-clamp-3 min-h-[4rem] leading-relaxed">
-                      {product.description}
-                    </p>
-
-                    {/* Supplier Info */}
-                    {product.supplier && (
-                      <div className="flex items-center gap-2 mb-4 p-2 bg-emerald-50 rounded-lg">
-                        <FaUser className="w-4 h-4 text-emerald-700" />
-                        <span className="text-sm font-semibold text-emerald-800">{product.supplier.name || 'Unknown Supplier'}</span>
-                      </div>
-                    )}
-
-                    {/* Price and Stock */}
-                    <div className="mb-5 pb-5 border-b-2 border-emerald-100">
-                      <div className="flex items-baseline gap-2 mb-2">
-                        <p className="text-3xl font-extrabold text-emerald-600">
-                          ${Number(product.price).toFixed(2)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {product.quantity > 0 ? (
-                          <>
-                            <FaBox className="w-4 h-4 text-green-600" />
-                            <p className="text-sm text-green-700 font-semibold">
-                              In Stock ({product.quantity} available)
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <FaBox className="w-4 h-4 text-red-500" />
-                            <p className="text-sm text-red-600 font-semibold">Out of Stock</p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Add to Cart Button */}
-                    <button
-                      onClick={() => handleAddToCart(product._id)}
-                      disabled={addingToCart === product._id || product.quantity === 0 || !isLoggedIn}
-                      className={`w-full py-3.5 px-4 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 shadow-md ${
-                        !isLoggedIn
-                          ? 'bg-gray-400 text-white cursor-not-allowed shadow-sm'
-                          : product.quantity === 0
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-sm'
-                          : addingToCart === product._id
-                          ? 'bg-emerald-500 text-white shadow-lg'
-                          : showSuccess === product._id
-                          ? 'bg-green-600 text-white shadow-xl'
-                          : 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-700 hover:to-emerald-600 hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0'
-                      }`}
-                    >
-                      {!isLoggedIn ? (
-                        <>Login to Add</>
-                      ) : addingToCart === product._id ? (
-                        <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                          Adding...
-                        </>
-                      ) : showSuccess === product._id ? (
-                        <>
-                          <FaCheckCircle className="w-5 h-5" /> Added!
-                        </>
-                      ) : (
-                        <>
-                          <FaShoppingCart className="w-5 h-5" /> Add to Cart
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          </>
+  
+                {/* Product Content */}
+                <div className="p-6">
+  
+                  <h3 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-emerald-700 transition">
+                    {product.name}
+                  </h3>
+  
+                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                    {product.description}
+                  </p>
+  
+                  {/* Supplier */}
+                  {product.supplier && (
+                    <div className="flex items-center gap-2 mb-4 bg-emerald-50 p-2 rounded-lg">
+                      <FaUser className="text-emerald-700" />
+                      <span className="text-sm font-semibold text-emerald-800">
+                        {product.supplier.name}
+                      </span>
+                    </div>
+                  )}
+  
+                  {/* Price and Stock */}
+                  <div className="border-b border-emerald-100 pb-4 mb-4">
+                    <p className="text-3xl font-extrabold text-emerald-600">
+                      ${Number(product.price).toFixed(2)}
+                    </p>
+  
+                    <div className="flex items-center gap-2 mt-2">
+                      <FaBox className={product.quantity > 0 ? "text-green-600" : "text-red-600"} />
+                      <span className={`text-sm font-semibold ${product.quantity > 0 ? "text-green-700" : "text-red-600"}`}>
+                        {product.quantity > 0 ? `In Stock (${product.quantity})` : "Out of Stock"}
+                      </span>
+                    </div>
+                  </div>
+  
+                  {/* Add to Cart Button */}
+                  <button
+                    onClick={() => handleAddToCart(product._id)}
+                    disabled={product.quantity === 0 || !isLoggedIn}
+                    className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-3 
+                      transition-all duration-200 shadow-md
+                      ${
+                        !isLoggedIn
+                          ? "bg-gray-400 cursor-not-allowed text-white"
+                          : product.quantity === 0
+                          ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                          : "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-xl"
+                      }
+                    `}
+                  >
+                    <FaShoppingCart /> Add to Cart
+                  </button>
+  
+                </div>
+              </div>
+            ))}
+          </div>
         )}
+  
       </div>
-
-     
     </div>
   )
+  
 }
 
 export default Products
