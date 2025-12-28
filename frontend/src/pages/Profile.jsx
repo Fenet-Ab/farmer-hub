@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaUser, FaEnvelope, FaShieldAlt, FaCamera, FaLock } from "react-icons/fa";
-import ChangePassword from "../components/Popup/ChangePassword";
+
 
 const Profile = () => {
   const [user, setUser] = useState({});
@@ -67,7 +67,7 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.profilePic) {
-          setProfilePictureUrl(`http://localhost:5000${res.data.profilePic}`);
+          setProfilePictureUrl(res.data.profilePic);
         } else {
           setProfilePictureUrl(null);
         }
@@ -110,7 +110,9 @@ const Profile = () => {
         setPreviewUrl(null);
       }
       if (res.data.profilePic) {
-        setProfilePictureUrl(`http://localhost:5000${res.data.profilePic}`);
+        setProfilePictureUrl(res.data.profilePic);
+        // Dispatch event for Navbar to update
+        window.dispatchEvent(new Event('profileUpdated'));
       }
     } catch (err) {
       setMessage({ type: 'error', text: err.response?.data?.message || 'Upload failed' });
@@ -148,11 +150,10 @@ const Profile = () => {
         <p className="text-sm text-gray-600 mb-6">Manage your account settings and preferences</p>
 
         {message.text && (
-          <div className={`mb-6 border rounded-xl px-4 py-3 ${
-            message.type === 'success'
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-              : 'bg-red-50 text-red-700 border-red-200'
-          }`}>
+          <div className={`mb-6 border rounded-xl px-4 py-3 ${message.type === 'success'
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            : 'bg-red-50 text-red-700 border-red-200'
+            }`}>
             {message.text}
           </div>
         )}

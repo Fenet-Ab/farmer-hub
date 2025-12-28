@@ -1,15 +1,14 @@
 import mongoose from 'mongoose';
 
-export const connectDB=async()=>{
-    const uri=process.env.MONGO_URI;
-    if(!uri)throw new error("MONGO_URI missing");
-    try{
-        const connect = await mongoose.connect('mongodb://localhost:27017/farmer-market');
-        console.log(`MongoDB connected: ${connect.connection.host},${connect.connection.name}`);
+export const connectDB = async () => {
+  // process.env.MONGO_URI || 
+  const uri = 'mongodb://localhost:27017/farmer-market';
 
-    }catch(err){
-        console.error('MongoDB connection error',err.message);
-        process.exit(1);
-
-    };
-}
+  try {
+    const conn = await mongoose.connect(uri);
+    console.log(`MongoDB Connected: ${conn.connection.host}, DB: ${conn.connection.name}`);
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    process.exit(1);
+  }
+};

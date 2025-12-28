@@ -1,40 +1,40 @@
+// Import env loader first to ensure environment variables are loaded
+import '../config/env.js';
+
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 
-//  Ensure uploads directory exists safely
-const uploadDir = path.join(process.cwd(), "uploads");
-
-try {
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-    console.log(" 'uploads' folder created successfully");
-  }
-} catch (err) {
-  console.error(" Failed to create uploads folder:", err.message);
-  throw new Error("Cannot initialize upload directory");
+// Validate environment variables
+if (!process.env.CLOUDINARY_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  throw new Error(
+    "Missing Cloudinary environment variables. Please check your .env file"
+  );
 }
 
-//  Configure multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    try {
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      const ext = path.extname(file.originalname).toLowerCase();
-      cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-    } catch (err) {
-      cb(new Error("Error generating file name"), null);
-    }
+// Configure cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cloudinary storage configuration
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    return {
+      folder: "products",
+      allowed_formats: ["jpg", "jpeg", "png", "webp"],
+      public_id: `${file.fieldname}-${Date.now()}`,
+    };
   },
 });
 
-//  File filter for images only
+// File filter (extra safety)
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|webp/;
-  const ext = path.extname(file.originalname).toLowerCase();
+  const ext = file.mimetype.split("/")[1];
 
   if (!allowedTypes.test(ext)) {
     return cb(
@@ -45,26 +45,20 @@ const fileFilter = (req, file, cb) => {
       false
     );
   }
-
   cb(null, true);
 };
 
-//  Multer instance with limits
+// Multer instance
 const upload = multer({
   storage,
   fileFilter,
-  // limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
 });
 
-//  Centralized error handler for upload errors
+// Centralized upload error handler
 export const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    // Multer-specific errors
     let message = "Upload failed";
     switch (err.code) {
-      // case "LIMIT_FILE_SIZE":
-      //   message = "File too large. Max size is 5MB.";
-      //   break;
       case "LIMIT_UNEXPECTED_FILE":
         message = err.message || "Unexpected file type.";
         break;
@@ -75,7 +69,6 @@ export const handleUploadError = (err, req, res, next) => {
   }
 
   if (err) {
-    // Other errors
     console.error("Upload error:", err.message);
     return res.status(500).json({
       success: false,
@@ -83,7 +76,6 @@ export const handleUploadError = (err, req, res, next) => {
     });
   }
 
-  // Continue to next middleware if no errors
   next();
 };
 

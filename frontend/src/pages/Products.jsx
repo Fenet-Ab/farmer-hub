@@ -1,303 +1,291 @@
-import React, { useState, useEffect } from 'react'
-
-import axios from 'axios'
-import { FaShoppingCart, FaSearch, FaFilter, FaTimes, FaCheckCircle, FaBox, FaUser, FaTag } from 'react-icons/fa'
+import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
+import {
+  FaShoppingCart,
+  FaSearch,
+  FaFilter,
+  FaTimes,
+  FaCheckCircle,
+  FaUser,
+  FaTag,
+  FaArrowRight,
+  FaSyncAlt,
+  FaChevronDown,
+  FaLeaf,
+} from 'react-icons/fa';
+import { useCart } from '../context/CartContext';
 
 const Products = () => {
-  const [products, setProducts] = useState([])
-  const [filteredProducts, setFilteredProducts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
-  const [addingToCart, setAddingToCart] = useState(null)
-  const [showSuccess, setShowSuccess] = useState(null)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [addingToCart, setAddingToCart] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { refreshCartCount } = useCart();
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    setIsLoggedIn(!!token)
-    fetchProducts()
-  }, [])
-
-  useEffect(() => {
-    filterProducts()
-  }, [products, searchTerm, selectedCategory])
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+    fetchProducts();
+  }, []);
 
   const fetchProducts = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const res = await axios.get('http://localhost:5000/api/products')
-      // Handle both singular and plural response formats
-      const list = res?.data?.product || res?.data?.products || []
-      setProducts(Array.isArray(list) ? list : [])
+      setLoading(true);
+      setError(null);
+      const res = await axios.get('http://localhost:5000/api/products');
+      const list = res?.data?.product || res?.data?.products || [];
+      setProducts(Array.isArray(list) ? list : []);
     } catch (err) {
-      console.error('Error fetching products:', err)
-      setError(err?.response?.data?.message || 'Failed to fetch products')
+      setError(err?.response?.data?.message || 'Failed to fetch products');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const filterProducts = () => {
-    let filtered = [...products]
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const matchesSearch = 
+        !searchTerm || 
+        [p.name, p.description, p.category, p.supplier?.name]
+          .some(field => field?.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchTerm, selectedCategory]);
 
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (p) =>
-          p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.supplier?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-
-    // Filter by category
-    if (selectedCategory !== 'All') {
-      filtered = filtered.filter((p) => p.category === selectedCategory)
-    }
-
-    setFilteredProducts(filtered)
-  }
+  const categories = useMemo(() => 
+    ['All', ...new Set(products.map((p) => p.category).filter(Boolean))], 
+  [products]);
 
   const handleAddToCart = async (productId) => {
     if (!isLoggedIn) {
-      alert('Please login to add items to cart')
-      return
+      alert('Please login to add items to cart');
+      return;
     }
-
     try {
-      setAddingToCart(productId)
-      setError(null)
-      const token = localStorage.getItem('token')
+      setAddingToCart(productId);
+      const token = localStorage.getItem('token');
       await axios.post(
-        'http://localhost:5000/api/cart/add',
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/cart/add`,
         { productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
-      )
-      setShowSuccess(productId)
-      setTimeout(() => setShowSuccess(null), 2000)
+      );
+      setShowSuccess(productId);
+      setTimeout(() => setShowSuccess(null), 2000);
+      refreshCartCount();
+      window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to add to cart')
-      setTimeout(() => setError(null), 3000)
+      setError('Could not add to cart');
+      setTimeout(() => setError(null), 3000);
     } finally {
-      setAddingToCart(null)
+      setAddingToCart(null);
     }
-  }
-
-  const categories = ['All', ...new Set(products.map((p) => p.category).filter(Boolean))]
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50 flex flex-col">
-  
-      <div className="container mx-auto px-4 py-12 mt-20 flex-1 pb-28">
-  
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <h1 className="text-5xl font-extrabold text-emerald-700 drop-shadow-sm">
-            Explore Our Products
-          </h1>
-          <p className="text-gray-600 mt-2 text-lg">
-            High-quality items sourced from trusted local farmers
-          </p>
-        </div>
-  
-        {/* Search & Filter Row */}
-        <div className="mb-10 flex flex-col md:flex-row gap-5 max-w-4xl mx-auto">
-  
-          {/* Search */}
-          <div className="flex-1 relative">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by name, description or supplier..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-12 py-4 bg-white/80 backdrop-blur-sm border border-gray-300 
-                rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                <FaTimes />
-              </button>
-            )}
+    <div className="min-h-screen bg-[#fcfdfd] font-poppins pb-20">
+      {/* --- Page Header --- */}
+      <header className="bg-emerald-900 pt-32 pb-20 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-emerald-800/20 skew-x-12 translate-x-20" />
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2 text-emerald-400 mb-4">
+                <FaLeaf className="animate-bounce" />
+                <span className="text-xs font-black uppercase tracking-[0.3em]">Premium Marketplace</span>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-black text-white leading-tight">
+                Fresh From <br /> <span className="text-emerald-400 italic">The Source.</span>
+              </h1>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-3xl">
+              <p className="text-emerald-100 text-sm font-medium">
+                Showing <span className="text-white font-bold">{filteredProducts.length}</span> unique items
+              </p>
+            </div>
           </div>
-  
-          {/* Category Filter */}
-          <div className="relative">
-            <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="pl-12 pr-10 py-4 bg-white/80 backdrop-blur-sm border border-gray-300 
-                rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 appearance-none min-w-[180px]"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+        </div>
+      </header>
+
+      {/* --- Search & Navigation Bar --- */}
+      <section className="sticky top-[73px] z-40 -mt-8">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="bg-white rounded-3xl shadow-xl shadow-emerald-900/5 border border-slate-100 p-3 flex flex-col lg:flex-row items-center gap-4">
+            
+            {/* Search Input */}
+            <div className="relative w-full group">
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search for grain, fertilizer, tools..."
+                className="w-full pl-12 pr-10 py-4 bg-slate-50 border-none rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              />
+              {searchTerm && (
+                <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500">
+                  <FaTimes size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Category Toggle */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 w-full lg:w-auto px-2 no-scrollbar">
+              {categories.slice(0, 5).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-5 py-2.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all uppercase tracking-wider ${
+                    selectedCategory === cat 
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  {cat}
+                </button>
               ))}
-            </select>
+              {categories.length > 5 && (
+                <select 
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="bg-slate-100 text-slate-500 px-3 py-2.5 rounded-2xl text-xs font-black uppercase outline-none"
+                >
+                  <option value="">More...</option>
+                  {categories.slice(5).map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
+            </div>
+
+            <button
+              onClick={fetchProducts}
+              className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all active:scale-95"
+            >
+              <FaSyncAlt className={loading ? 'animate-spin' : ''} />
+            </button>
           </div>
         </div>
-  
-        {/* Success Message */}
-        {showSuccess && (
-          <div className="mb-6 p-4 bg-green-100/80 border border-green-300 
-            text-green-900 rounded-xl flex items-center gap-3 max-w-3xl mx-auto shadow">
-            <FaCheckCircle className="text-green-700" />
-            Product added to cart successfully!
+      </section>
+
+      {/* --- Main Product Grid --- */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <div key={n} className="h-[450px] bg-slate-100 animate-pulse rounded-[2.5rem]" />
+            ))}
           </div>
-        )}
-  
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100/80 border border-red-300 
-            text-red-900 rounded-xl max-w-3xl mx-auto shadow">
-            {error}
+        ) : filteredProducts.length === 0 ? (
+          <div className="py-40 text-center">
+            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FaTag className="text-4xl text-slate-200" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800">No results found</h2>
+            <p className="text-slate-500 mt-2">Try searching for something else or clear your filters.</p>
           </div>
-        )}
-  
-        {/* Loading */}
-        {loading && (
-          <div className="text-center py-24">
-            <div className="animate-spin h-16 w-16 rounded-full border-4 border-emerald-500 border-t-transparent mx-auto"></div>
-            <p className="mt-4 text-gray-600 text-lg">Loading products...</p>
-          </div>
-        )}
-  
-        {/* No Products */}
-        {!loading && !error && filteredProducts.length === 0 && (
-          <div className="text-center py-24">
-            <FaBox className="mx-auto text-gray-300 text-7xl mb-4" />
-            <p className="text-gray-600 text-lg mb-2">No products found.</p>
-  
-            {searchTerm && (
-              <button
-                onClick={() => {
-                  setSearchTerm('')
-                  setSelectedCategory('All')
-                }}
-                className="mt-4 text-emerald-600 hover:underline font-semibold"
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+            {filteredProducts.map((p) => (
+              <div 
+                key={p._id || p.id} 
+                className="group bg-white rounded-[2.5rem] border border-slate-100 hover:shadow-2xl hover:shadow-emerald-900/10 transition-all duration-500 flex flex-col overflow-hidden"
               >
-                Clear Filters
-              </button>
-            )}
-          </div>
-        )}
-  
-        {/* Product Count */}
-        {!loading && filteredProducts.length > 0 && (
-          <div className="mb-8 text-center text-gray-600">
-            <span className="font-semibold text-emerald-700">{filteredProducts.length}</span>
-            &nbsp;of {products.length} products
-          </div>
-        )}
-  
-        {/* Product Grid */}
-        {!loading && filteredProducts.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filteredProducts.map((product) => (
-              <div
-                key={product._id}
-                className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-md 
-                  hover:shadow-2xl transition-all duration-300 overflow-hidden 
-                  border border-emerald-100 group"
-              >
-  
-                {/* Product Image */}
-                <div className="relative h-56 overflow-hidden">
+                {/* Image Section */}
+                <div className="relative h-72 overflow-hidden m-3 rounded-[2rem]">
                   <img
-                    src={
-                      product.image?.startsWith('http')
-                        ? product.image
-                        : `http://localhost:5000${product.image}`
-                    }
-                    className="w-full h-full object-cover group-hover:scale-110 
-                      transition-transform duration-700"
-                    onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=Image' }}
+                    src={p.image || p.images?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}
+                    alt={p.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
-  
-                  <span className="absolute top-3 right-3 px-3 py-1.5 bg-emerald-700 text-white 
-                    text-xs font-bold rounded-full shadow">
-                    <FaTag className="inline-block mr-1" /> {product.category}
-                  </span>
-  
-                  {product.quantity === 0 && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center">
-                      <span className="bg-red-600 text-white py-2 px-4 rounded-lg font-bold">
-                        Out of Stock
-                      </span>
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-800 shadow-sm border border-white/50">
+                      {p.category || 'Essential'}
+                    </span>
+                  </div>
+                  {p.stock <= 0 && (
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center">
+                      <span className="bg-white text-slate-900 px-6 py-2 rounded-full font-black text-xs uppercase tracking-tighter">Sold Out</span>
                     </div>
                   )}
                 </div>
-  
-                {/* Product Content */}
-                <div className="p-6">
-  
-                  <h3 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-emerald-700 transition">
-                    {product.name}
-                  </h3>
-  
-                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-                    {product.description}
-                  </p>
-  
-                  {/* Supplier */}
-                  {product.supplier && (
-                    <div className="flex items-center gap-2 mb-4 bg-emerald-50 p-2 rounded-lg">
-                      <FaUser className="text-emerald-700" />
-                      <span className="text-sm font-semibold text-emerald-800">
-                        {product.supplier.name}
+
+                {/* Content Section */}
+                <div className="px-7 pb-8 flex-1 flex flex-col">
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FaUser className="text-emerald-600 text-[10px]" />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                        {p.supplier?.name || 'Verified Partner'}
                       </span>
                     </div>
-                  )}
-  
-                  {/* Price and Stock */}
-                  <div className="border-b border-emerald-100 pb-4 mb-4">
-                    <p className="text-3xl font-extrabold text-emerald-600">
-                      ${Number(product.price).toFixed(2)}
-                    </p>
-  
-                    <div className="flex items-center gap-2 mt-2">
-                      <FaBox className={product.quantity > 0 ? "text-green-600" : "text-red-600"} />
-                      <span className={`text-sm font-semibold ${product.quantity > 0 ? "text-green-700" : "text-red-600"}`}>
-                        {product.quantity > 0 ? `In Stock (${product.quantity})` : "Out of Stock"}
-                      </span>
+                    <h2 className="text-xl font-black text-slate-800 line-clamp-1 group-hover:text-emerald-600 transition-colors">
+                      {p.name}
+                    </h2>
+                  </div>
+
+                  <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed mb-6 italic">
+                    {p.description || 'Expertly sourced and quality tested for your peace of mind.'}
+                  </p>
+
+                  <div className="mt-auto">
+                    <div className="flex items-center justify-between mb-6">
+                      <p className="text-3xl font-black text-slate-900 tracking-tighter">
+                        ${p.price?.toFixed?.(2) ?? p.price ?? '0.00'}
+                      </p>
+                      <div className={`px-3 py-1.5 rounded-full text-[10px] font-black border ${
+                        p.stock > 0 ? 'border-emerald-100 text-emerald-600 bg-emerald-50' : 'border-rose-100 text-rose-600 bg-rose-50'
+                      }`}>
+                        {p.stock > 0 ? `${p.stock} Units` : 'Waitlist'}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleAddToCart(p._id || p.id)}
+                        disabled={addingToCart === (p._id || p.id) || p.stock <= 0}
+                        className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${
+                          showSuccess === (p._id || p.id) 
+                            ? 'bg-emerald-500 text-white' 
+                            : 'bg-slate-900 text-white hover:bg-emerald-600 shadow-xl shadow-slate-200 hover:shadow-emerald-200 disabled:bg-slate-100 disabled:text-slate-400'
+                        }`}
+                      >
+                        {addingToCart === (p._id || p.id) ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : showSuccess === (p._id || p.id) ? (
+                          <FaCheckCircle className="text-lg" />
+                        ) : (
+                          <><FaShoppingCart /> Add to Cart</>
+                        )}
+                      </button>
+                      
+                      <button 
+                        onClick={() => window.open(`/products/${p._id || p.id}`, '_self')}
+                        className="p-4 rounded-2xl border-2 border-slate-100 text-slate-400 hover:text-emerald-600 hover:border-emerald-100 transition-all active:scale-90"
+                      >
+                        <FaArrowRight />
+                      </button>
                     </div>
                   </div>
-  
-                  {/* Add to Cart Button */}
-                  <button
-                    onClick={() => handleAddToCart(product._id)}
-                    disabled={product.quantity === 0 || !isLoggedIn}
-                    className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-3 
-                      transition-all duration-200 shadow-md
-                      ${
-                        !isLoggedIn
-                          ? "bg-gray-400 cursor-not-allowed text-white"
-                          : product.quantity === 0
-                          ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                          : "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-xl"
-                      }
-                    `}
-                  >
-                    <FaShoppingCart /> Add to Cart
-                  </button>
-  
                 </div>
               </div>
             ))}
           </div>
         )}
-  
-      </div>
+      </main>
+      
+      {/* Error Toast */}
+      {error && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-5">
+          <div className="bg-slate-900 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4">
+            <span className="text-xs font-bold">{error}</span>
+            <button onClick={() => setError(null)}><FaTimes className="text-rose-500" /></button>
+          </div>
+        </div>
+      )}
     </div>
-  )
-  
-}
+  );
+};
 
-export default Products
+export default Products;

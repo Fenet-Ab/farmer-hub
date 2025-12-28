@@ -12,11 +12,12 @@ import {
   FaCheckCircle,
   FaClock,
   FaTruck,
-  FaTimesCircle
+  FaTimesCircle,
+  FaTimes
 } from 'react-icons/fa'
 
 const User = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false) // Default closed on mobile
   const [orders, setOrders] = useState([])
   const [cart, setCart] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -33,35 +34,25 @@ const User = () => {
       setError(null)
       const token = localStorage.getItem('token')
 
-      // Fetch user profile
       const profileRes = await axios.get('http://localhost:5000/api/users/profile', {
         headers: { Authorization: `Bearer ${token}` }
       })
       setUserInfo(profileRes.data)
 
-      // Fetch user orders
       const ordersRes = await axios.get('http://localhost:5000/api/orders/my-orders', {
         headers: { Authorization: `Bearer ${token}` }
       })
       setOrders(ordersRes.data?.orders || [])
 
-      // Fetch cart
       try {
         const cartRes = await axios.get('http://localhost:5000/api/cart', {
           headers: { Authorization: `Bearer ${token}` }
         })
-        if (cartRes.data?.cart) {
-          setCart(cartRes.data)
-        }
-      } catch (cartErr) {
-        // Cart might be empty, that's okay
-        setCart(null)
-      }
+        if (cartRes.data?.cart) setCart(cartRes.data)
+      } catch (cartErr) { setCart(null) }
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to load dashboard data')
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   const stats = {
@@ -70,8 +61,6 @@ const User = () => {
     cartItems: cart?.cart?.items?.length || 0,
     pendingOrders: orders.filter(o => o.status === 'pending' || o.status === 'processing').length
   }
-
-  const recentOrders = orders.slice(0, 5)
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -84,235 +73,151 @@ const User = () => {
     const config = statusConfig[status] || statusConfig.pending
     const Icon = config.icon
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-        <Icon className="w-3 h-3" />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${config.bg} ${config.text}`}>
+        <Icon className="w-2.5 h-2.5" />
+        {status}
       </span>
     )
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-emerald-50 via-white to-lime-50">
-      {/* Sidebar */}
-      <div className={`fixed left-0 top-[40px] h-[calc(100vh-40px)] z-40 transition-transform duration-300 ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0`}>
-        <UserSidebar />
-      </div>
+    <div className="flex min-h-screen bg-slate-50 font-poppins pt-16">
+      
+      {/* 1. Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-[100] md:hidden backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
-      {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 w-full md:ml-64 p-4 md:p-8`}>
-        {/* Top Bar */}
-        <div className="flex items-center justify-between mb-6">
+      {/* 2. Responsive Sidebar */}
+      <aside className={`
+        fixed left-0 top-0 h-full z-[110] bg-white shadow-2xl transition-transform duration-300 w-64
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 md:z-30 md:top-20 md:h-[calc(100vh-80px)] md:bg-transparent md:shadow-none
+      `}>
+        <div className="p-4 md:hidden flex justify-between items-center border-b">
+          <span className="font-bold text-emerald-600">Menu</span>
+          <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-slate-400"><FaTimes /></button>
+        </div>
+        <UserSidebar />
+      </aside>
+
+      {/* 3. Main Content Area */}
+      <main className="flex-1 w-full md:ml-64 px-4 py-6 md:px-10 md:py-8">
+        
+        {/* Header Section */}
+        <header className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Welcome back{userInfo?.name ? `, ${userInfo.name}` : ''}!</h1>
-            <p className="text-gray-600 mt-1">Here's what's happening with your account</p>
+            <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">
+              Hello, <span className="text-emerald-600">{userInfo?.name?.split(' ')[0] || 'User'}</span>!
+            </h1>
+            <p className="text-sm text-slate-500 font-medium">Here's your farm activity summary.</p>
           </div>
+          
+          {/* Mobile Toggle Button */}
           <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 md:hidden rounded-lg bg-gray-600 text-white"
+            onClick={() => setIsSidebarOpen(true)}
+            className="md:hidden p-3 rounded-2xl bg-white border border-slate-200 text-slate-600 shadow-sm active:scale-90 transition-transform"
           >
             <FaBars />
           </button>
-        </div>
+        </header>
 
-        {loading && (
-          <div className="text-gray-600">Loading dashboard...</div>
-        )}
-
-        {error && !loading && (
-          <div className="text-red-600 mb-4 bg-red-50 p-4 rounded-lg">{error}</div>
-        )}
-
-        {!loading && !error && (
-          <>
-            {/* KPI Cards */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500">Total Orders</p>
-                  <span className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
-                    <FaClipboardList />
-                  </span>
+        {loading ? (
+          <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" /></div>
+        ) : (
+          <div className="space-y-8">
+            
+            {/* KPI Grid - Horizontal Scroll on Small Screens */}
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+              {[
+                { label: 'Total Orders', val: stats.totalOrders, icon: <FaClipboardList />, color: 'emerald' },
+                { label: 'Total Spent', val: `$${stats.totalSpent.toFixed(2)}`, icon: <FaDollarSign />, color: 'lime' },
+                { label: 'In Cart', val: stats.cartItems, icon: <FaShoppingCart />, color: 'blue' },
+                { label: 'Pending', val: stats.pendingOrders, icon: <FaClock />, color: 'orange' }
+              ].map((item, idx) => (
+                <div key={idx} className="bg-white p-4 md:p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                  <div className={`w-10 h-10 rounded-xl bg-${item.color}-50 text-${item.color}-600 flex items-center justify-center mb-4`}>
+                    {item.icon}
+                  </div>
+                  <div>
+                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">{item.label}</p>
+                    <p className="text-lg md:text-2xl font-black text-slate-900 leading-tight mt-1">{item.val}</p>
+                  </div>
                 </div>
-                <p className="mt-2 text-3xl font-extrabold text-gray-800">
-                  {stats.totalOrders}
-                </p>
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500">Total Spent</p>
-                  <span className="p-2 rounded-lg bg-lime-50 text-lime-600">
-                    <FaDollarSign />
-                  </span>
-                </div>
-                <p className="mt-2 text-3xl font-extrabold text-gray-800">
-                  ${stats.totalSpent.toFixed(2)}
-                </p>
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500">Cart Items</p>
-                  <span className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
-                    <FaShoppingCart />
-                  </span>
-                </div>
-                <p className="mt-2 text-3xl font-extrabold text-gray-800">
-                  {stats.cartItems}
-                </p>
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500">Pending Orders</p>
-                  <span className="p-2 rounded-lg bg-yellow-50 text-yellow-600">
-                    <FaClock />
-                  </span>
-                </div>
-                <p className="mt-2 text-3xl font-extrabold text-gray-800">
-                  {stats.pendingOrders}
-                </p>
-              </div>
+              ))}
             </section>
 
-            {/* Two Columns: Recent Orders + Quick Actions */}
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Recent Orders */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold">Recent Orders</h2>
-                    <Link
-                      to="/orders"
-                      className="text-emerald-700 hover:underline text-sm flex items-center gap-1"
-                    >
-                      View all <FaArrowRight className="w-3 h-3" />
-                    </Link>
+            {/* Content Split: Orders & Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Recent Orders List */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+                    <h2 className="font-bold text-slate-800">Recent Activity</h2>
+                    <Link to="/orders" className="text-xs font-bold text-emerald-600 hover:underline">See All</Link>
                   </div>
-                  {recentOrders.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <FaClipboardList className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                      <p>No orders yet</p>
-                      <Link
-                        to="/products"
-                        className="text-emerald-700 hover:underline text-sm mt-2 inline-block"
-                      >
-                        Start shopping →
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-gray-100">
-                      {recentOrders.map((order) => (
-                        <div
-                          key={order._id}
-                          className="py-3 flex items-center justify-between hover:bg-emerald-50/30 transition-colors"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <p className="font-medium text-gray-800">
-                                Order #{order._id.slice(-6).toUpperCase()}
-                              </p>
-                              {getStatusBadge(order.status)}
+                  
+                  <div className="divide-y divide-slate-50">
+                    {orders.length === 0 ? (
+                      <div className="p-10 text-center text-slate-400 text-sm">No orders yet.</div>
+                    ) : (
+                      orders.slice(0, 4).map((order) => (
+                        <div key={order._id} className="p-4 md:p-6 hover:bg-slate-50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex flex-col">
+                              <span className="text-xs text-slate-400 font-mono mb-1">#{order._id.slice(-6).toUpperCase()}</span>
+                              <span className="font-bold text-slate-800 text-sm line-clamp-1">
+                                {order.items?.[0]?.product?.name || 'Order Harvest'}
+                              </span>
                             </div>
-                            <p className="text-sm text-gray-500">
-                              {order.items?.length || 0} item(s) • ${order.totalAmount?.toFixed(2) || '0.00'}
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              {order.createdAt
-                                ? new Date(order.createdAt).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric',
-                                  })
-                                : ''}
-                            </p>
+                            {getStatusBadge(order.status)}
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-500">{new Date(order.createdAt).toLocaleDateString()}</span>
+                            <span className="font-black text-slate-900">${order.totalAmount?.toFixed(2)}</span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Quick Actions */}
-              <div className="space-y-6">
-                <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                  <h2 className="text-lg font-bold mb-4">Quick Actions</h2>
-                  <div className="grid grid-cols-1 gap-3">
-                    <Link
-                      to="/products"
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors"
+              {/* Quick Actions Panel */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-slate-800 px-2">Quick Links</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    { to: '/products', label: 'Marketplace', sub: 'Buy supplies', icon: <FaBox /> },
+                    { to: '/cart', label: 'My Cart', sub: `${stats.cartItems} Items`, icon: <FaShoppingCart /> },
+                    { to: '/profile', label: 'Settings', sub: 'Account info', icon: <FaCheckCircle /> }
+                  ].map((link, idx) => (
+                    <Link 
+                      key={idx} 
+                      to={link.to} 
+                      className="flex items-center gap-4 p-4 bg-white border border-slate-100 rounded-2xl hover:border-emerald-300 transition-all group shadow-sm active:scale-95"
                     >
-                      <span className="p-2 rounded-lg bg-emerald-600 text-white">
-                        <FaBox />
-                      </span>
-                      <div>
-                        <p className="font-medium text-gray-800">Browse Products</p>
-                        <p className="text-xs text-gray-500">Shop for farm supplies</p>
+                      <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
+                        {link.icon}
                       </div>
-                    </Link>
-                    <Link
-                      to="/cart"
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors"
-                    >
-                      <span className="p-2 rounded-lg bg-emerald-600 text-white">
-                        <FaShoppingCart />
-                      </span>
                       <div>
-                        <p className="font-medium text-gray-800">View Cart</p>
-                        <p className="text-xs text-gray-500">
-                          {stats.cartItems > 0 ? `${stats.cartItems} item(s)` : 'Cart is empty'}
-                        </p>
+                        <p className="font-bold text-slate-800 text-sm">{link.label}</p>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{link.sub}</p>
                       </div>
+                      <FaArrowRight className="ml-auto text-slate-300 group-hover:text-emerald-500 transition-colors" />
                     </Link>
-                    <Link
-                      to="/orders"
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors"
-                    >
-                      <span className="p-2 rounded-lg bg-emerald-600 text-white">
-                        <FaClipboardList />
-                      </span>
-                      <div>
-                        <p className="font-medium text-gray-800">My Orders</p>
-                        <p className="text-xs text-gray-500">Track your purchases</p>
-                      </div>
-                    </Link>
-                    <Link
-                      to="/profile"
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors"
-                    >
-                      <span className="p-2 rounded-lg bg-emerald-600 text-white">
-                        <FaCheckCircle />
-                      </span>
-                      <div>
-                        <p className="font-medium text-gray-800">My Profile</p>
-                        <p className="text-xs text-gray-500">Manage account settings</p>
-                      </div>
-                    </Link>
-                  </div>
+                  ))}
                 </div>
-
-                {stats.cartItems > 0 && (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
-                    <h3 className="text-sm font-semibold text-emerald-800 mb-2">Cart Reminder</h3>
-                    <p className="text-xs text-emerald-700 mb-3">
-                      You have {stats.cartItems} item(s) in your cart
-                    </p>
-                    <Link
-                      to="/cart"
-                      className="text-xs text-emerald-700 hover:text-emerald-800 font-medium flex items-center gap-1"
-                    >
-                      View Cart <FaArrowRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                )}
               </div>
-            </section>
-          </>
+
+            </div>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }

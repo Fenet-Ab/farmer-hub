@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom';
 import { FaShoppingCart, FaLeaf, FaSeedling, FaProductHunt, FaDropbox, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import homeImage from '../../assets/home.png'
 import fertilizerImage from '../../assets/fertilizer.png'
@@ -97,14 +98,21 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className='flex flex-col sm:flex-row gap-4 pt-4'>
-              <button className='flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-lime-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-200'>
-                <FaShoppingCart />
-                Shop Now
-              </button>
-              <button className='flex items-center justify-center gap-2 bg-white text-emerald-600 border-2 border-emerald-600 px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-emerald-50 transition-all duration-200'>
-                Learn More
-              </button>
-            </div>
+  {/* Shop Now -> Products Page */}
+  <Link to="/products" className="w-full sm:w-auto">
+    <button className='w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-lime-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200'>
+      <FaShoppingCart />
+      Shop Now
+    </button>
+  </Link>
+
+  {/* Learn More -> About Page */}
+  <Link to="/about" className="w-full sm:w-auto">
+    <button className='w-full flex items-center justify-center gap-2 bg-white text-emerald-600 border-2 border-emerald-600 px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-emerald-50 active:scale-95 transition-all duration-200'>
+      Learn More
+    </button>
+  </Link>
+</div>
 
             {/* Stats */}
             

@@ -16,24 +16,30 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    category:{
-      type:String,
-      required:true
-
-    },
-    image: {
-      type: String, // store image path or URL
+    category: {
+      type: String,
       required: true,
     },
+
+    // Cloudinary image URL
+    image: {
+      type: String,
+      required: true,
+    },
+
+    // Cloudinary public_id (IMPORTANT for delete/update)
+    imagePublicId: {
+      type: String,
+      required: true,
+    },
+
     supplier: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // your user model name (even if the file is userModel.js)
+      ref: "User",
       required: true,
     },
   },
   { timestamps: true }
 );
 
-const Product = mongoose.model("Product", productSchema);
-
-export default Product;
+export default mongoose.model("Product", productSchema);

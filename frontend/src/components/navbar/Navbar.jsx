@@ -4,6 +4,7 @@ import { GiWheat } from 'react-icons/gi'
 import { FaBars, FaTimes, FaGlobe, FaShoppingCart, FaUser } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import { useCart } from '../../context/CartContext'
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -19,6 +20,7 @@ const Navbar = () => {
   const languageRef = useRef(null)
   const profileRef = useRef(null)
   const { t, i18n } = useTranslation()
+  const { cartCount } = useCart()
 
   // Check if user is logged in
   useEffect(() => {
@@ -75,10 +77,11 @@ const Navbar = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.profilePic) {
-          setProfilePictureUrl(`http://localhost:5000${res.data.profilePic}`);
+          setProfilePictureUrl(res.data.profilePic); // Cloudinary URL
         } else {
           setProfilePictureUrl(null);
         }
+
       } catch (err) {
         console.error('Failed to load profile picture:', err);
         setProfilePictureUrl(null);
@@ -86,6 +89,15 @@ const Navbar = () => {
     };
 
     fetchProfilePic();
+
+    // Listen for profile updates
+    const handleProfileUpdate = () => fetchProfilePic();
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+
   }, [isLoggedIn]);
 
   return (
@@ -104,21 +116,19 @@ const Navbar = () => {
 
         {/* Center Links */}
         <ul className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-4 list-none  '>
-          {[{ name: t('home'), path: '/' }, { name: t('products'), path: '/products' }, { name: t('about'), path: '/about' }].map(
+          {[{ name: t('home'), path: '/' }, { name: t('products'), path: '/products' }, { name: t('about'), path: '/about' }, { name: t('Dashboard'), path: '/user-dashboard' }].map(
             (item) => (
               <li key={item.path} className='relative group'>
                 <Link
                   to={item.path}
-                  className={`px-3 py-2 transition-colors ${
-                    isActive(item.path) ? 'text-emerald-600 font-semibold' : 'text-gray-700 hover:text-emerald-600'
-                  }`}
+                  className={`px-3 py-2 transition-colors ${isActive(item.path) ? 'text-emerald-600 font-semibold' : 'text-gray-700 hover:text-emerald-600'
+                    }`}
                 >
                   {item.name}
                 </Link>
                 <span
-                  className={`absolute left-0 bottom-0 w-0 h-[2px] bg-emerald-600 rounded-full transition-all duration-300 group-hover:w-full ${
-                    isActive(item.path) ? 'w-full' : ''
-                  }`}
+                  className={`absolute left-0 bottom-0 w-0 h-[2px] bg-emerald-600 rounded-full transition-all duration-300 group-hover:w-full ${isActive(item.path) ? 'w-full' : ''
+                    }`}
                 ></span>
               </li>
             )
@@ -146,9 +156,8 @@ const Navbar = () => {
                       e.stopPropagation() // Prevent closing before selection
                       handleLanguageSelect(lang)
                     }}
-                    className={`block  text-left px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 ${
-                      selectedLanguage === lang ? 'font-semibold text-emerald-600' : ''
-                    }`}
+                    className={`block  text-left px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 ${selectedLanguage === lang ? 'font-semibold text-emerald-600' : ''
+                      }`}
                   >
                     {lang}
                   </button>
@@ -159,7 +168,14 @@ const Navbar = () => {
 
           {isLoggedIn ? (
             <>
-              <FaShoppingCart size={24} className='text-gray-600 cursor-pointer hover:text-emerald-600 transition-colors' />
+              <Link to="/cart" className="relative">
+                <FaShoppingCart size={24} className='text-gray-600 cursor-pointer hover:text-emerald-600 transition-colors' />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </Link>
 
               {/* Profile */}
               <div className='relative' ref={profileRef}>
@@ -235,9 +251,8 @@ const Navbar = () => {
                       e.stopPropagation()
                       handleLanguageSelect(lang)
                     }}
-                    className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 ${
-                      selectedLanguage === lang ? 'font-semibold text-emerald-600' : ''
-                    }`}
+                    className={`block w-full text-left px-4 py-2 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 ${selectedLanguage === lang ? 'font-semibold text-emerald-600' : ''
+                      }`}
                   >
                     {lang}
                   </button>
@@ -248,7 +263,14 @@ const Navbar = () => {
 
           {isLoggedIn && (
             <>
-              <FaShoppingCart size={24} className='text-gray-600 cursor-pointer hover:text-emerald-600 transition-colors' />
+              <Link to="/cart" className="relative">
+                <FaShoppingCart size={24} className='text-gray-600 cursor-pointer hover:text-emerald-600 transition-colors' />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </Link>
               <div className='relative' ref={profileRef}>
                 <button onClick={toggleProfileMenu} className='p-2 rounded-full bg-gray-100'>
                   {profilePictureUrl ? (
@@ -301,9 +323,8 @@ const Navbar = () => {
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className={`block px-4 py-3 rounded-lg transition-colors ${
-                      isActive(item.path) ? 'bg-emerald-50 text-emerald-600 font-semibold' : 'hover:bg-emerald-50 hover:text-emerald-600'
-                    }`}
+                    className={`block px-4 py-3 rounded-lg transition-colors ${isActive(item.path) ? 'bg-emerald-50 text-emerald-600 font-semibold' : 'hover:bg-emerald-50 hover:text-emerald-600'
+                      }`}
                     onClick={toggleMobileMenu}
                   >
                     {item.name}

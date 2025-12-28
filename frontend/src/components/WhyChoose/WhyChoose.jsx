@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
 import { FaAward, FaTruck, FaShieldAlt, FaUsers, FaClock, FaHeadset } from 'react-icons/fa'
 
 const WhyChoose = () => {
@@ -101,9 +102,14 @@ const WhyChoose = () => {
             <p className='text-white/90 mb-6 text-lg md:text-xl max-w-2xl mx-auto'>
               Experience the difference of premium agricultural products and services
             </p>
+            
+    
+
+  <Link to="/products" className="w-full sm:w-auto">
             <button className='bg-white text-emerald-600 px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform duration-200 shadow-lg'>
               Get Started Today
             </button>
+            </Link>
           </div>
         </div>
       </div>

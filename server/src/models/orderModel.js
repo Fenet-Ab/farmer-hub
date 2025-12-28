@@ -7,6 +7,7 @@ const orderSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+
     items: [
       {
         product: {
@@ -25,15 +26,50 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
+
     totalAmount: {
       type: Number,
       required: true,
     },
+
+    // 🔹 Order lifecycle
     status: {
       type: String,
       enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
       default: 'pending',
     },
+
+    // 🔹 Payment info (Chapa-ready)
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'paid', 'failed'],
+      default: 'pending',
+    },
+
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
+
+    paidAt: {
+      type: Date,
+    },
+
+    paymentReference: {
+      type: String,
+      default: '',
+    },
+
+    // 🔹 Delivery info
+    isDelivered: {
+      type: Boolean,
+      default: false,
+    },
+
+    deliveredAt: {
+      type: Date,
+    },
+
     shippingAddress: {
       type: String,
       default: '',
@@ -44,6 +80,3 @@ const orderSchema = new mongoose.Schema(
 
 const Order = mongoose.model('Order', orderSchema)
 export default Order
-
-
-

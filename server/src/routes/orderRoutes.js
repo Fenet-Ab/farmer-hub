@@ -94,11 +94,11 @@ router.get('/supplier/my-orders', verifyToken, async (req, res) => {
 
     // Filter to only include items from this supplier and calculate supplier revenue
     const filteredOrders = orders.map(order => {
-      const supplierItems = order.items.filter(item => 
+      const supplierItems = order.items.filter(item =>
         item.product && item.product.supplier && item.product.supplier.toString() === req.user.id
       )
       const supplierTotal = supplierItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-      
+
       return {
         ...order.toObject(),
         supplierItems,
@@ -116,6 +116,80 @@ router.get('/supplier/my-orders', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error while fetching orders' })
   }
 })
+
+// Update delivery status (admin or supplier)
+router.patch('/update-delivery/:orderId', verifyToken, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { isDelivered } = req.body; // true/false
+
+    if (req.user.role !== 'supplier') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const order = await Order.findById(orderId).populate('items.product', 'supplier');
+
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    // If supplier, ensure they have at least one product in the order
+    if (req.user.role === 'supplier') {
+      const supplierItems = order.items.filter(
+        item => item.product.supplier.toString() === req.user.id
+      );
+      if (supplierItems.length === 0) {
+        return res.status(403).json({ message: 'You cannot update this order' });
+      }
+    }
+
+    order.isDelivered = isDelivered;
+    order.status = isDelivered ? 'delivered' : order.status;
+    order.deliveredAt = isDelivered ? new Date() : null;
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Order marked as ${isDelivered ? 'delivered' : 'not delivered'}`,
+      order,
+    });
+  } catch (error) {
+    console.error('Error updating delivery status:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+// Update order payment status (after Chapa payment)
+router.put('/:orderId/status', verifyToken, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status, paymentStatus } = req.body;
+
+    // Only the user who owns the order or admin can update payment status
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    if (req.user.role !== 'admin' && order.user.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    if (status) order.status = status;
+    if (paymentStatus) order.paymentStatus = paymentStatus;
+
+    await order.save();
+
+    const populatedOrder = await Order.findById(orderId)
+      .populate('items.product', 'name price image category');
+
+    res.status(200).json({
+      success: true,
+      message: 'Order status updated successfully',
+      order: populatedOrder,
+    });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ success: false, message: 'Server error while updating order status' });
+  }
+});
+
 
 export default router
 
