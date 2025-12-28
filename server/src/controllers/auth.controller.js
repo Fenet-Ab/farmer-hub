@@ -5,7 +5,7 @@ import User from '../models/userModel.js';
 // function to generate token
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id, role: user.role }, 
+    { id: user._id, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: '30d' }
   );
@@ -39,7 +39,7 @@ const register = async (req, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
-    
+
   });
 };
 
@@ -63,8 +63,8 @@ const login = async (req, res) => {
 
   res.status(200).json({
     message: "Logged in successfully",
-    role: user.role, 
-    token: generateToken(user), 
+    role: user.role,
+    token: generateToken(user),
   });
 };
 

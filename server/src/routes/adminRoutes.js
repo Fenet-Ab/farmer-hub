@@ -3,10 +3,49 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/userModel.js";
 import Order from "../models/orderModel.js";
+import Product from "../models/productModel.js";
 import verifyToken from '../middlewares/authMiddleware.js';
 import authorizeRoles from '../middlewares/roleMiddleware.js';
 
 const router = express.Router();
+
+// Get admin dashboard stats
+router.get("/stats", verifyToken, authorizeRoles("admin"), async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalProducts = await Product.countDocuments();
+    const totalOrders = await Order.countDocuments();
+
+    const revenueData = await Order.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalSales: { $sum: "$totalAmount" },
+        },
+      },
+    ]);
+    const revenue = revenueData.length > 0 ? revenueData[0].totalSales : 0;
+
+    const recentUsers = await User.find().select("name email role").sort({ createdAt: -1 }).limit(5);
+    const recentProducts = await Product.find().select("name category price").sort({ createdAt: -1 }).limit(5);
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalUsers,
+        totalProducts,
+        totalOrders,
+        revenue,
+      },
+      recentUsers,
+      recentProducts,
+    });
+  } catch (error) {
+    console.error("Error fetching admin stats:", error);
+    res.status(500).json({ success: false, message: "Server error while fetching stats" });
+  }
+});
+
 
 
 // List all users (admin only)
@@ -113,7 +152,7 @@ router.post("/create-user", verifyToken, authorizeRoles("admin"), async (req, re
       role: user.role,
     },
   });
-  
+
 });
 // Admin updates own profile
 router.put("/update-profile", verifyToken, authorizeRoles("admin"), async (req, res) => {
@@ -159,7 +198,7 @@ router.get("/orders", verifyToken, authorizeRoles("admin"), async (req, res) => 
       .populate("user", "name email")
       .populate("items.product", "name price image category")
       .sort({ createdAt: -1 });
-    
+
     res.status(200).json({
       success: true,
       count: orders.length,
@@ -176,7 +215,7 @@ router.put("/orders/:id/status", verifyToken, authorizeRoles("admin"), async (re
   try {
     const { status } = req.body;
     const validStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
-    
+
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({ message: "Invalid status. Must be one of: " + validStatuses.join(", ") });
     }
